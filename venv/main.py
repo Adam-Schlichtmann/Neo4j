@@ -1,5 +1,5 @@
 from neo4j.v1 import GraphDatabase
-
+import timeit
 
 def makeEight(s):
     x = '0'
@@ -76,13 +76,64 @@ class Connector(object):
                         "Create (n)-[:Parent]->(m) "
                         )
 
+    def countBacktracks(self):
+        with self._driver.session() as session:
+            start = timeit.default_timer()
+            result = session.run("Match (n:Node) "
+                                 "Where (n)-[:Parent]->() "
+                                 "return count(n) - 1 ")
+            end = timeit.default_timer()
+            for record in result:
+                print record.values()[0]
+            print "Time: {}".format(end - start)
+
+    # def countBacktracksPerDepth(self):
+    #     with self._driver.session() as session:
+    #         start = timeit.default_timer()
+    #         result = []
+    #         for i in range(0, 13):
+    #             r = session.run("Match (n:Node),(m:Node) "
+    #                             "Where n.id = 0 and (n)-[:Parent*1]->(m) "
+    #                             "return count(m)")
+    #             for record in r:
+    #                 result.append(record.values()[0])
+    #         end = timeit.default_timer()
+    #         print result
+    #         print "Time: {}".format(end - start)
+    #
+    # def countNodesPerDepth(self):
+    #     with self._driver.session() as session:
+    #         start = timeit.default_timer()
+    #         result = session.run("Match (n:Node) "
+    #                              "Where n.id = 0 "
+    #                              "Match (n)-[*..5]->(end) "
+    #                              "return count(distinct end) ")
+    #         end = timeit.default_timer()
+    #         for record in result:
+    #             for r in record.values():
+    #                 print r
+    #         print "Time: {}".format(end - start)
+    #
+    #
+    # def CPUperDepth(self):
+    #     with self._driver.session() as session:
+    #         start = timeit.default_timer()
+    #         result = session.run("Match (n:Node) "
+    #                              "Where n.id = 0 "
+    #                              "Match (n)-[*..5]->(end) "
+    #                              "return count(distinct end) ")
+    #         end = timeit.default_timer()
+    #         for record in result:
+    #             for r in record.values():
+    #                 print r
+    #         print "Time: {}".format(end - start)
 
 def main():
     connection = Connector('bolt://localhost:7687', 'neo4j', 'password')
     connection.createNodes()
     connection.createRelationshipNodes()
     connection.makeRelationships()
-    connection.makeRelationships2()
+    connection.countBacktracks()
     connection.close()
 
 
